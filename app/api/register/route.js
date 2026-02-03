@@ -17,18 +17,34 @@ export async function POST(request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const token = generateEmailToken();
-    const result = await pool.query(
-      'INSERT INTO Users (name, email, password, verification_token) VALUES ($1, $2, $3, $4) RETURNING id, name, email, status',
-      [name, email, hashedPassword, token]
-    );
+    
+    let result;
+    try {
+      result = await pool.query(
+        'INSERT INTO Users (name, email, password, verification_token) VALUES ($1, $2, $3, $4) RETURNING id, name, email, status',
+        [name, email, hashedPassword, token]
+      );
+    } catch (dbError) {
+      console.error('Ошибка БД:', dbError);
+      
+      // CRITICAL: Обработка ошибки уникального индекса на уровне БД
+      if (dbError.code === '23505') {
+        return NextResponse.json(
+          { error: 'Этот email уже зарегистрирован' },
+          { status: 409 }
+        );
+      }
+      throw dbError;
+    }
 
+    // Отправка email не блокирует ответ
     sendVerificationEmail(email, token, name).catch(err => 
       console.error('Ошибка отправки email:', err)
     );
 
     return NextResponse.json(
       { 
-        message: 'Регистрация успешна!', 
+        message: 'Регистрация успешна! Проверьте email для подтверждения.', 
         user: result.rows[0] 
       },
       { status: 201 }
