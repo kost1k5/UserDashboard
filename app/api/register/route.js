@@ -37,15 +37,22 @@ export async function POST(request) {
       throw dbError;
     }
 
-    // Отправка email не блокирует ответ
-    sendVerificationEmail(email, token, name).catch(err => 
-      console.error('Ошибка отправки email:', err)
-    );
+    // IMPORTANT: Отправка email асинхронно, не блокирует ответ
+    // NOTE: Логируем попытку отправки для отладки
+    console.log(`📧 Попытка отправки email на ${email}`);
+    sendVerificationEmail(email, token, name)
+      .then(() => console.log(`✅ Email успешно отправлен на ${email}`))
+      .catch(err => {
+        console.error(`❌ Ошибка отправки email на ${email}:`, err.message);
+        console.error('Детали:', err);
+      });
 
     return NextResponse.json(
       { 
         message: 'Регистрация успешна! Проверьте email для подтверждения.', 
-        user: result.rows[0] 
+        user: result.rows[0],
+        // NOTA BENE: В режиме разработки показываем токен в ответе
+        ...(process.env.NODE_ENV === 'development' ? { verificationToken: token } : {})
       },
       { status: 201 }
     );

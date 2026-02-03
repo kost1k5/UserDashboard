@@ -46,9 +46,17 @@ export async function POST(request) {
 
     const { action, userIds } = await request.json();
 
-    if (!action || !userIds || !Array.isArray(userIds) || userIds.length === 0) {
+    // IMPORTANT: delete_unverified не требует userIds
+    if (!action) {
       return NextResponse.json(
-        { error: 'Укажите действие и список пользователей' },
+        { error: 'Укажите действие' },
+        { status: 400 }
+      );
+    }
+
+    if (action !== 'delete_unverified' && (!userIds || !Array.isArray(userIds) || userIds.length === 0)) {
+      return NextResponse.json(
+        { error: 'Укажите список пользователей' },
         { status: 400 }
       );
     }

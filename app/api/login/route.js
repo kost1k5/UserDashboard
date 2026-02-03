@@ -44,13 +44,7 @@ export async function POST(request) {
       );
     }
 
-    if (user.status === 'unverified') {
-      return NextResponse.json(
-        { error: 'Подтвердите email перед входом. Проверьте почту!' },
-        { status: 403 }
-      );
-    }
-
+    // IMPORTANT: Обновляем время последнего входа
     await pool.query(
       'UPDATE Users SET last_login_time = NOW() WHERE id = $1',
       [user.id]
