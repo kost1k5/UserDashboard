@@ -44,7 +44,8 @@ export async function POST(request) {
       );
     }
 
-    // IMPORTANT: Обновляем время последнего входа
+  
+
     await pool.query(
       'UPDATE Users SET last_login_time = NOW() WHERE id = $1',
       [user.id]
