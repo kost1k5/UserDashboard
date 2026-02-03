@@ -1,24 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
-  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
     const token = localStorage.getItem('token');
     
     if (token) {
-      window.location.href = '/dashboard';
+      router.push('/dashboard');
     } else {
-      window.location.href = '/login';
+      router.push('/login');
     }
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
+  }, [router]);
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100">
